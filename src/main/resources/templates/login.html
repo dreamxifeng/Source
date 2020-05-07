@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>订单管理系统</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css"/>
+    <style>
+        body {
+            height: 100%;
+            background: #16a085;
+            overflow: hidden;
+        }
+        #veryCode{
+            width: 100px;
+            text-indent:0px;
+        }
+
+        canvas {
+            z-index: -1;
+            position: absolute;
+        }
+
+        .black_overlay {
+            display: none;
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 1001;
+            -moz-opacity: 0.8;
+            opacity: .80;
+            filter: alpha(opacity=80);
+        }
+
+        .white_content {
+            display: none;
+            position: absolute;
+            top: 25%;
+            left: 35%;
+            width: 25%;
+            height: 15%;
+            padding: 16px;
+            border: 2px solid black;
+            background-color: white;
+            z-index: 1002;
+            overflow: auto;
+        }
+    </style>
+    <script src="/js/jquery.js"></script>
+    <script src="/js/verifyCode.js"></script>
+    <script src="/js/Particleground.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            //粒子背景特效
+            $('body').particleground({
+                dotColor: '#5cbdaa',
+                lineColor: '#5cbdaa'
+            });
+            $("#loginBtn").click(function () {
+                $.post("/login", {userName: $("#userName").val(), password: $("#password").val(), veryCode: $("#veryCode").val()}, function (result) {
+                    if (result.success) {
+                        window.location.href = "main";
+                    } else {
+                        $("#errmsg").html(result.message);
+                    }
+                });
+            });
+        });
+
+    </script>
+</head>
+<body>
+<dl class="admin_login">
+    <dt>
+        <strong>订单管理系统</strong>
+        <em>Ordering Management System</em>
+    </dt>
+    <dd class="user_icon">
+        <input type="text" id="userName" placeholder="账号" class="login_txtbx" value="admin"/>
+    </dd>
+    <dd class="pwd_icon">
+        <input type="password" id="password" placeholder="密码" class="login_txtbx" value="1"/>
+    </dd>
+    <dd>
+        <input type="text" id="veryCode" placeholder="请输入验证码"  class="login_txtbx" style="width: 100px">
+        <a href="" onclick="changeImg()" style="color: red"><span style="font-size: 12px">换一张</span></a>
+        <img id="imgObj" src="/drawImage">
+    </dd>
+    <dd>
+        <input type="button" id="loginBtn" onclick="isRightCode()" value="立即登陆" class="submit_btn"/>
+    </dd>
+    <dd>
+        <p>© 2019-2020 3T科技 版权所有</p>
+    </dd>
+    <dd>
+        <p><span id="errmsg" style="color: yellow;"></span></p>
+    </dd>
+</dl>
+</body>
+</html>

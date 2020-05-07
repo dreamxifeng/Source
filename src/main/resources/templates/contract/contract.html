@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="cn" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>订单信息管理</title>
+    <link th:replace="comm/header :: copy"/>
+    <style type="text/css">
+        .textbox-label {
+            width: 70px;
+        }
+    </style>
+    <script type="text/javascript">
+        var isadd = true;
+        var isfinish = "true";
+
+        function formatOp(val, row, index) {
+            var str = '';
+            if (row.isfinish === false) {
+                if ($("#update").length > 0) {
+                    str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-edit primary"  onclick="editRecord(\'{0}\');"  style="margin-right: 5px">编辑</a>', index);
+                }
+                if ($("#delete").length > 0) {
+                    str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-del error"   onclick="deleteRecord(\'{0}\');"  style="margin-right: 5px">删除</a>', row.id);
+                }
+            }
+            if ($("#extra").length > 0) {
+                str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-extra success"   onclick="extraRecord(\'{0}\',\'{1}\');"  style="margin-right: 5px">附件</a>', row.id, row.isfinish);
+            }
+            return str;
+        }
+
+        function searchRecord() {
+            $("#dg").datagrid('load', {
+                "findDate": $("#findDate").val(),
+                "container": $("#container").val(),
+                "flowerNo": $("#flowerCode").val(),
+                "finish": $("#finish").val()
+            });
+        }
+
+        function closeDlg() {
+            $("#dlg").dialog("close");
+            $('#fm').form('clear');
+        }
+
+        function saveRecord() {
+            $("#fm").form("submit", {
+                url: "/contract/contract/save",
+                onSubmit: function () {
+                    return $(this).form("validate");
+                },
+                success: function (result) {
+                    var result = eval('(' + result + ')');
+                    message(result.message)
+                    if (result.success) {
+                        if (isadd === false) {
+                            closeDlg();
+                        }
+                        $("#dg").datagrid("reload");
+                        fmreset();
+                    }
+                }
+            });
+        }
+
+        function openDlg() {
+            isadd = true;
+            $('#fm').form('clear');
+            $("#dlg").dialog("open").dialog('center').dialog("setTitle", "添加订单信息管理");
+
+        }
+
+        function editRecord(index) {
+            isadd = false;
+            $('#fm').form('clear');
+            $("#dg").datagrid('selectRow', index);
+            var row = $("#dg").datagrid('getSelected');
+            $("#dlg").dialog("open").dialog("setTitle", "修改订单信息管理");
+            $("#fm").form("load", row);
+        }
+
+
+        function deleteRecord(id) {
+            $.messager.confirm("系统提示", "您确定要删除这条数据吗?", function (r) {
+                if (r) {
+                    $.post("/contract/contract/delete", {id: id}, function (result) {
+                        message(result.message)
+                        if (result.success) {
+                            $("#dg").datagrid("reload");
+                        }
+                    }, "json");
+                }
+            });
+        }
+
+        function extraRecord(id, isFinish) {
+            $('#fileboxId').filebox('clear');
+            isfinish = isFinish;
+            $("#dlg-extra").dialog("open").dialog("setTitle", "附件信息设置");
+            $("#extraId1").val(id);
+            $("#extraId").val(id);
+            if (isFinish === "true") {
+                $("#extraSave").linkbutton('disable');
+            } else {
+                $("#extraSave").linkbutton('enable');
+            }
+            $('#dg-extra').datagrid({
+                url: '/contract/extra/listall',
+                method: 'get',
+                queryParams: {
+                    orderid: id
+                }
+            });
+        }
+
+        function formatExtra(val, row, index) {
+            var str = $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-download-extra primary"   onclick="downloadExtra(\'{0}\');"  style="margin-right: 5px">下载</a>', row.id);
+            if (isfinish === "true") {
+                str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-del-extra error"   onclick="deleteExtra(\'{0}\');"  style="margin-right: 5px">删除</a>', row.id);
+            }
+            return str;
+        }
+
+        function deleteExtra(id) {
+            $.messager.confirm("系统提示", "您确定要删除这条数据吗?", function (r) {
+                if (r) {
+                    $.post("/contract/extra/delete", {id: id}, function (result) {
+                        message(result.message)
+                        if (result.success) {
+                            $("#dg-extra").datagrid("reload");
+                        }
+                    }, "json");
+                }
+            });
+        }
+
+        function saveExtra() {
+            $("#fm-extra").form("submit", {
+                url: "/contract/extra/save",
+                onSubmit: function () {
+                    return $(this).form("validate");
+                },
+                success: function (result) {
+                    if (result !== '') {
+                        var result = eval('(' + result + ')');
+                        message(result.message)
+                        if (result.success) {
+                            $("#dg-extra").datagrid("reload");
+                            $("#fm-extra").form("clear");
+                            $("#extraId").val($("#extraId1").val());
+                            $('#fileboxId').filebox('clear');
+                        }
+                    } else {
+                        message('上传文件不能大于4MB')
+                    }
+                }
+            });
+        }
+
+        function downloadExtra(id) {
+            var form = $("<form>");
+            form.attr("style", "display:none");
+            form.attr("target", "");
+            form.attr("method", "post");//提交方式为post
+            form.attr("action", "/contract/extra/downloadFile?id=" + id);//定义action
+            $("body").append(form);
+            form.submit();
+        }
+
+        function openDownload() {
+            var form = $("<form>");
+            form.attr("style", "display:none");
+            form.attr("target", "");
+            form.attr("method", "post");//提交方式为post
+            form.attr("action", "/contract/contract/downloadFile");//定义action
+            $("body").append(form);
+            form.submit();
+        }
+    </script>
+</head>
+<body style="margin: 1px">
+<div>
+    <shiro:hasPermission name="order:order:delete">
+        <input type="hidden" id="delete"/>
+    </shiro:hasPermission>
+    <shiro:hasPermission name="order:order:update">
+        <input type="hidden" id="update"/>
+    </shiro:hasPermission>
+    <shiro:hasPermission name="order:order:extra">
+        <input type="hidden" id="extra"/>
+    </shiro:hasPermission>
+</div>
+<div id="dlg-extra" class="easyui-dialog" style="width:540px;"
+     data-options="closed:true,modal:true,border:'thin'">
+    <div class="easyui-layout" style="width:535px;height:450px;">
+        <div data-options="region:'north'" style="height:185px">
+            <input type="hidden" id="extraId1"/>
+
+            <form id="fm-extra" method="post" enctype="multipart/form-data"
+                  style="margin:0;padding-top: 10px;padding-left: 10px">
+                <input type="hidden" name="id" id="id"/>
+                <input type="hidden" id="extraId" name="orderId"/>
+                <table>
+                    <tr>
+                        <td>
+                            <div style="margin-bottom: 10px">
+                                <input labelWidth="40" label="说明:" class="easyui-textbox" name="summary"
+                                       style="width:100%;"
+                                       required="true">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="margin-bottom: 10px;">
+                                <input id="fileboxId" labelWidth="40" name="file" label="文件:" class="easyui-filebox"
+                                       buttonText="选择文件"
+                                       style="width:500px;"
+                                       data-options="prompt:'选择一个文件...'">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="margin-bottom:10px">
+                                <input labelWidth="40" class="easyui-textbox" name="remarks" style="width:100%;"
+                                       label="备注:">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex;justify-content: flex-end">
+                                <a id="extraSave" href="javascript:void(0)" class="easyui-linkbutton"
+                                   iconCls="icon-save" plain="true"
+                                   onclick="saveExtra()">保存</a>
+                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-close" plain="true"
+                                   onclick="$('#dlg-extra').dialog('close')">关闭</a>
+                            </div>
+
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+
+        <div data-options="region:'center'" border="0">
+            <table id="dg-extra" class="easyui-datagrid" style="margin: 10px"
+                   data-options="border:true,singleSelect:true,fit:true,fitColumns:true">
+                <thead>
+                <tr>
+                    <th field="id" width="50" hidden align="center">编号</th>
+                    <th field="summary" width="150" align="center">说明</th>
+                    <th field="remarks" hidden width="80" align="left">备注</th>
+                    <th field="aa" width="80" align="center" formatter="formatExtra">操作</th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<table id="dg" class="easyui-datagrid"
+       fitColumns="true" pagination="true" rownumbers="true" singleSelect="true" method="get"
+       url="/contract/contract/list" fit="true" toolbar="#tb">
+    <thead data-options="frozen:true">
+    <tr>
+        <th field="cdate" width="100" align="center">日期</th>
+        <th field="container" width="100" align="center">柜号</th>
+        <th field="flowerNo" width="100" align="center">花号</th>
+    </tr>
+    </thead>
+    <thead>
+    <tr>
+        <th field="cnumber" width="120" align="center">坯布米数</th>
+        <th field="id" width="20" hidden align="center">编号</th>
+        <th field="customerId" width="50" hidden align="center"></th>
+        <th field="customerName" width="120" align="center">客户</th>
+        <th field="codePortId" width="50" hidden align="center"></th>
+        <th field="codePortName" width="120" align="center">码口</th>
+        <th field="prouctWidthId" width="50" hidden align="center"></th>
+        <th field="prouctWidthName" width="120" align="center">幅宽</th>
+        <th field="openScissorsId" width="50" hidden align="center">开剪码数</th>
+        <th field="openScissorsName" width="120" align="center">开剪码数</th>
+        <th field="productId" width="50" hidden align="center">成件码数</th>
+        <th field="productName" width="120" align="center">成件码数</th>
+        <th field="technologyId" width="50" hidden align="center">工艺要求</th>
+        <th field="technologyName" width="120" hidden align="center">工艺要求</th>
+        <th field="packingId" width="50" hidden align="center">包装要求</th>
+        <th field="packingName" width="120" hidden align="center">包装要求</th>
+        <th field="sampleId" width="120" hidden align="center">样品数量</th>
+        <th field="sampleName" width="120" align="center">样品</th>
+        <th field="csample" width="120" align="center">样品数量</th>
+        <th field="greyWeight" width="120" align="center">坯布克重</th>
+        <th field="productWeight" width="120" align="center">成品克重</th>
+        <th field="shippingMark" width="120" hidden align="center">唛头</th>
+        <th field="selvageMark" width="120" hidden align="center">边字</th>
+        <th field="remarks" width="200" hidden align="left">备注</th>
+        <th field="aa" width="250" align="center" formatter="formatOp">操作</th>
+    </tr>
+    </thead>
+
+</table>
+
+<div id="tb">
+    <shiro:hasPermission name="order:order:add">
+        <div style="display: inline-block;">
+            <a href="javascript:openDlg()" class="easyui-linkbutton primary" iconCls="fa fa-plus"
+               plain="true">添加</a>
+        </div>
+    </shiro:hasPermission>
+    <shiro:hasPermission name="order:order:download">
+        <div style="display: inline-block;">
+            <a href="javascript:openDownload()" class="easyui-linkbutton primary" iconCls="fa fa-download"
+               plain="true">下载</a>
+        </div>
+    </shiro:hasPermission>
+    <shiro:hasPermission name="order:order:search">
+        <div style="display: inline-block;float:right;padding-right: 20px">
+                <table>
+                    <tr>
+                        <td style="padding-right: 10px">
+                            <div class="form-item">
+                                <label class="label-top">日期：</label>
+                                <input id="findDate" type="text" style="height: 25px" class="easyui-datebox"/>
+                            </div>
+                        </td>
+                        <td style="padding-right: 10px">
+                            <div class="form-item">
+                                <label class="label-top">柜号：</label>
+                                <input id="container" class="easyui-textbox" style="height: 25px">
+                            </div>
+                        </td>
+                        <td style="padding-right: 10px">
+                            <div class="form-item">
+                                <label class="label-top">花号：</label>
+                                <input id="flowerCode" class="easyui-textbox" style="height: 25px">
+                            </div>
+                        </td>
+                        <td style="padding-right: 10px">
+                            <div class="form-item">
+                                <select id="finish" class="easyui-combobox" style="width:100px;height: 25px"
+                                        data-options="editable:false,panelHeight:null">
+                                    <option value="2" selected>全部</option>
+                                    <option value="1">已完成</option>
+                                    <option value="0">未完成</option>
+                                </select>
+                            </div>
+                        </td>
+
+                        <td>
+                            <a href="javascript:void(0)" onclick="searchRecord()" class="easyui-linkbutton primary"
+                               iconCls="fa fa-search"
+                               plain="true">搜索</a>
+                        </td>
+                    </tr>
+                </table>
+            <!--</form>-->
+
+        </div>
+    </shiro:hasPermission>
+</div>
+
+<div id="dlg" class="easyui-dialog" style="width:480px;"
+     data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-buttons'">
+
+    <form id="fm" method="post" style="margin:0;padding:10px 10px">
+        <input type="hidden" name="id"/>
+        <table>
+            <tr>
+                <td class="blank">
+                    <div style="margin-bottom:5px">
+                        <input class="easyui-combobox" name="customerId" style="width:100%;" editable="false"
+                               data-options="
+                        url:'/customer/customer/listall',
+                        method:'get',
+                        valueField:'id',
+                        textField:'cname',
+                        panelHeight:'auto',
+                        label: '客户:',
+                        labelPosition: 'before'
+                        ">
+                    </div>
+                </td>
+                <td class="blank">
+                    <div style="margin-bottom: 5px;padding-left: 20px">
+                        <input class="easyui-textbox" name="container" style="width:100%;" label="柜号:"
+                               required="true">
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="blank">
+                    <div style="margin-bottom: 5px">
+                        <input id="flowerNo" class="easyui-textbox" name="flowerNo" style="width:100%;" label="花号:"
+                               required="true">
+                    </div>
+                </td>
+                <td class="blank">
+                    <div style="margin-bottom: 5px ;padding-left: 20px">
+                        <input id="cnumber" class="easyui-numberbox" name="cnumber" style="width:100%;" label="坯布米数:"
+                               required="true">
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="blank">
+                    <div style="margin-bottom: 5px">
+                        <input class="easyui-combobox" name="codePortId" style="width:100%;" editable="false"
+                               data-options="
+                    url:'/base/codeport/listall',
+                    method:'get',
+                    valueField:'id',
+                    textField:'codePort',
+                    panelHeight:'auto',
+                    label: '码口:',
+                    labelPosition: 'before'
+                    ">
+                    </div>
+                </td>
+                <td class="blank">
+                    <div style="margin-bottom: 5px ;padding-left: 20px">
+                        <input class="easyui-combobox" name="prouctWidthId" style="width:100%;" editable="false"
+                               data-options="
+                    url:'/base/productwidth/listall',
+                    method:'get',
+                    valueField:'id',
+                    textField:'productWidth',
+                    panelHeight:'auto',
+                    label: '幅宽:',
+                    labelPosition: 'before'
+                    ">
+                    </div>
+                </td>
+
+            </tr>
+            <tr>
+                <td class="blank">
+                    <div style="margin-bottom: 5px">
+                        <input class="easyui-combobox" name="openScissorsId" style="width:100%;" editable="false"
+                               data-options="
+                    url:'/base/openscissors/listall',
+                    method:'get',
+                    valueField:'id',
+                    textField:'openScissors',
+                    panelHeight:'auto',
+                    label: '开剪码数:',
+                    labelPosition: 'before'
+                    ">
+                    </div>
+                </td>
+                <td class="blank">
+                    <div style="margin-bottom: 5px;padding-left: 20px">
+                        <input class="easyui-combobox" name="productId" style="width:100%;" editable="false"
+                               data-options="
+                    url:'/base/product/listall',
+                    method:'get',
+                    valueField:'id',
+                    textField:'product',
+                    panelHeight:'auto',
+                    label: '成件码数:',
+                    labelPosition: 'before'
+                    ">
+                    </div>
+                </td>
+
+            </tr>
+            <tr>
+                <td class="blank">
+                    <div style="margin-bottom: 5px">
+                        <input class="easyui-combobox" name="technologyId" style="width:100%;" editable="false"
+                               data-options="
+                    url:'/base/technology/listall',
+                    method:'get',
+                    valueField:'id',
+                    textField:'technology',
+                    panelHeight:'auto',
+                    label: '工艺要求:',
+                    labelPosition: 'before'
+                    ">
+                    </div>
+                </td>
+                <td class="blank">
+                    <div style="margin-bottom: 5px ;padding-left: 20px">
+                        <input class="easyui-combobox" name="packingId" style="width:100%;" editable="false"
+                               data-options="
+                    url:'/base/packaging/listall',
+                    method:'get',
+                    valueField:'id',
+                    textField:'packaging',
+                    panelHeight:'auto',
+                    label: '包装要求:',
+                    labelPosition: 'before'
+                    ">
+                    </div>
+                </td>
+
+            </tr>
+            <tr>
+                <td class="blank">
+                    <div style="margin-bottom: 5px">
+                        <input class="easyui-combobox" name="sampleId" style="width:100%;" editable="false"
+                               data-options="
+                    url:'/base/simple/listall',
+                    method:'get',
+                    valueField:'id',
+                    textField:'cname',
+                    panelHeight:'auto',
+                    label: '样品:',
+                    labelPosition: 'before'
+                    ">
+                    </div>
+                </td>
+                <td class="blank">
+                    <div style="margin-bottom: 5px ;padding-left: 20px">
+                        <input id="csample" class="easyui-numberbox" name="csample" style="width:100%;" label="样品数量:"
+                               required="true" data-options="validType:'numbers'">
+
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="blank">
+                    <div style="margin-bottom: 5px">
+                        <input id="greyWeight" class="easyui-textbox" name="greyWeight" style="width:100%;"
+                               label="坯布克重:" required="true" data-options="validType:'numbers'">
+                    </div>
+                </td>
+                <td class="blank">
+                    <div style="margin-bottom: 5px ;padding-left: 20px">
+                        <input id="productWeight" class="easyui-textbox" name="productWeight" style="width:100%;"
+                               label="成品克重:" required="true" data-options="validType:'numbers'">
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="blank" colspan="2">
+                    <div style="margin-bottom: 5px">
+                        <input class="easyui-textbox" name="shippingMark" style="width:100%;" label="唛头:"
+                               required="true">
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="blank" colspan="2">
+                    <div style="margin-bottom: 5px">
+                        <input class="easyui-textbox" name="selvageMark" style="width:100%;" label="边字:"
+                               required="true">
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="blank" colspan="2">
+                    <div style="margin-bottom:5px">
+                        <input id="remarks" class="easyui-textbox" name="remarks" style="width:100%;height:60px"
+                               label="备注:"
+                               multiline="true">
+                    </div>
+                </td>
+            </tr>
+
+        </table>
+    </form>
+</div>
+<div id="dlg-buttons">
+    <a href="javascript:saveRecord()" class="easyui-linkbutton" iconCls="fa fa-check">保存</a>
+    <a href="javascript:closeDlg()" class="easyui-linkbutton" iconCls="fa fa-times">关闭</a>
+</div>
+
+
+<script type="text/javascript">
+    $(function () {
+        $("#dg-extra").datagrid({
+            onClickRow: function (index, row) {
+                $("#fm-extra").form("load", row);
+                $("#extraId").val($("#extraId1").val());
+            }
+        });
+        $("#dg").datagrid({
+            onLoadSuccess: function (data) {
+                $('.easyui-linkbutton-edit').linkbutton({text: '编辑', plain: true});
+                $('.easyui-linkbutton-del').linkbutton({text: '删除', plain: true});
+                $('.easyui-linkbutton-extra').linkbutton({text: '附件', plain: true});
+                $('#dg').datagrid('fixRowHeight');
+            }
+        });
+
+
+        $("#dg-extra").datagrid({
+            onLoadSuccess: function (data) {
+                $('.easyui-linkbutton-del-extra').linkbutton({text: '删除', plain: true, iconCls: 'fa fa-pencil'});
+                $('.easyui-linkbutton-download-extra').linkbutton({text: '下载', plain: true, iconCls: 'fa fa-trash-o'});
+                $('#dg').datagrid('fixRowHeight');
+            }
+        });
+    })
+
+    function fmreset() {
+        $('#flowerNo').textbox('clear');
+        $('#cnumber').textbox('clear');
+        $('#greyWeight').textbox('clear');
+        $('#productWeight').textbox('clear');
+        $('#productWeight').textbox('clear');
+        $('#remarks').textbox('clear');
+        $('#id').val('');
+    }
+</script>
+
+</body>
+</html>

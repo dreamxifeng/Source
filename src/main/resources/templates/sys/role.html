@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>角色管理</title>
+    <link th:include="comm/header :: copy">
+
+</head>
+<body style="margin: 1px">
+<shiro:hasPermission name="sys:role:setting">
+    <input type="hidden" id="set"/>
+</shiro:hasPermission>
+<shiro:hasPermission name="sys:role:delete">
+    <input type="hidden" id="delete"/>
+</shiro:hasPermission>
+<shiro:hasPermission name="sys:role:edit">
+    <input type="hidden" id="update"/>
+</shiro:hasPermission>
+<table id="dg" class="easyui-datagrid"
+       fitColumns="true" pagination="true" rownumbers="true" url="/sys/role" method="get" fit="true" toolbar="#tb"
+       striped="true">
+    <thead>
+    <th field="ck" width="20" align="center" checkbox="true"></th>
+    <th field="id" width="20" hidden align="center">编号</th>
+    <th field="cname" width="150" align="center">角色名称</th>
+    <th field="description" width="100" align="center" hidden="true">备注</th>
+    <th field="aa" width="50" align="center" formatter="formatOp">操作</th>
+    </thead>
+</table>
+
+<div id="tb">
+    <div style="display: inline-block">
+        <shiro:hasPermission name="sys:role:add">
+            <a href="javascript:openRoleAddDialog()" class="easyui-linkbutton" iconCls="icon-add" plain="true">添加</a>
+        </shiro:hasPermission>
+        <shiro:hasPermission name="sys:role:deleteAll">
+            <a href="javascript:deleteRole()" class="easyui-linkbutton" iconCls="icon-remove" plain="true">删除</a>
+        </shiro:hasPermission>
+    </div>
+    <shiro:hasPermission name="sys:role:search">
+        <div style="display: inline-block;float: right">
+            &nbsp;角色名称：&nbsp;<input type="text" id="s_roleName" size="20"
+                                    onkeydown="if(event.keyCode==13) searchRole()"/>
+            <a href="javascript:searchRole()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+        </div>
+    </shiro:hasPermission>
+</div>
+
+
+<div id="dlg" class="easyui-dialog" style="width: 450px;height: 280px;padding: 10px 20px"
+     closed="true" buttons="#dlg-buttons" modal="true" data-options="onClose:function(){resetValue()}">
+    <form id="fm" method="post">
+        <input type="hidden" name="id" id="id">
+        <table cellspacing="8px">
+            <tr>
+                <td>角色名称：</td>
+                <td>
+                    <input type="text" id="cname" name="cname" class="easyui-validatebox" required="true"/>
+                </td>
+            </tr>
+            <tr>
+                <td valign="top">备注：</td>
+                <td>
+                    <textarea rows="5" cols="40" id="description" name="description"></textarea>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+
+<div id="dlg-buttons">
+    <a href="javascript:saveRole()" class="easyui-linkbutton primary">保存</a>
+    <a href="javascript:closeRoleDialog()" class="easyui-linkbutton ">关闭</a>
+</div>
+
+
+<div id="dlg2" class="easyui-dialog" style="width: 300px;height: 400px;padding: 10px 20px"
+     closed="true" modal="true" buttons="#dlg-buttons2">
+    <input type="hidden" id="roleId" name="roleId"/>
+    <ul id="menuTree" class="easyui-tree"></ul>
+</div>
+
+<div id="dlg-buttons2">
+    <a href="javascript:saveMenuSet()" class="easyui-linkbutton" iconCls="icon-ok">保存</a>
+    <a href="javascript:closeMenuSetDialog()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+</div>
+<script type="text/javascript">
+
+    function setRecord(roleId) {
+        $("#dlg2").dialog("open").dialog("setTitle", "权限菜单设置");
+        $("#menuTree").tree({
+            lines: true,
+            checkbox: true,
+            cascadeCheck: false,
+            method: 'get',
+            url: '/sys/perm/right?roleid=' + roleId,
+            onLoadSuccess: function () {
+                $("#menuTree").tree("expandAll");
+            },
+            onCheck: function (node, checked) {
+                if (checked) {
+                    checkNode($("#menuTree").tree("getParent", node.target));
+                }
+            }
+        });
+        $("#roleId").val(roleId);
+    }
+
+    function checkNode(node) {
+        if (!node) {
+            return;
+        } else {
+            checkNode($("#menuTree").tree("getParent", node.target));
+            $("#menuTree").tree("check", node.target);
+        }
+    }
+
+    function saveMenuSet() {
+        var roleId = $("#roleId").val();
+        var nodes = $("#menuTree").tree("getChecked");
+        var menuArrIds = [];
+        for (var i = 0; i < nodes.length; i++) {
+            menuArrIds.push(nodes[i].id);
+        }
+        var menuIds = menuArrIds.join(",");
+        $.post("/sys/perm/saveRolePerms", {menuIds: menuIds, roleId: roleId}, function (result) {
+            if (result.success) {
+                closeMenuSetDialog();
+            }
+            message(result.message);
+        }, "json");
+    }
+
+    function closeMenuSetDialog() {
+        $("#dlg2").dialog("close");
+    }
+
+    function searchRole() {
+        $("#dg").datagrid('load', {
+            "name": $("#s_roleName").val()
+        });
+    }
+
+    function resetValue() {
+        $('#fm').form('reset');
+    }
+
+    function closeRoleDialog() {
+        $("#dlg").dialog("close");
+        resetValue();
+    }
+
+    function saveRole() {
+        $("#fm").form("submit", {
+            url: "/sys/role",
+            onSubmit: function () {
+                return $(this).form("validate");
+            },
+            success: function (result) {
+                var result = eval('(' + result + ')');
+                if (result.success) {
+                    $("#dlg").dialog("close");
+                    $("#dg").datagrid("reload");
+                }
+                message(result.message);
+            }
+        });
+    }
+
+    function openRoleAddDialog() {
+        $("#dlg").dialog("open").dialog("setTitle", "添加角色信息");
+        $('#fm').form('clear');
+    }
+
+    function editRecord(index) {
+        $("#dg").datagrid("clearSelections");
+        $('#dg').datagrid('selectRow', index);
+        var row = $("#dg").datagrid("getSelected");
+        $("#dlg").dialog("open").dialog("setTitle", "修改角色信息");
+        $("#fm").form("load", row);
+    }
+
+    function deleteRecord(id) {
+        $.messager.confirm("系统提示", "您确定要删除这条数据吗?", function (r) {
+            if (r) {
+                $.post("/sys/role/delete", {id: id}, function (result) {
+                    if (result.success) {
+                        message("数据已成功删除！")
+                        $("#dg").datagrid("reload");
+                    } else {
+                        message(result.msg)
+                    }
+                }, "json");
+            }
+        });
+    }
+
+    function deleteRole() {
+        var selectedRows = $("#dg").datagrid("getSelections");
+        if (selectedRows.length < 1) {
+            $.messager.alert("系统提示", "至少选择一条要删除的数据！");
+            return;
+        }
+        var ids = selectedRows.map(item => {
+            return item.id;
+        });
+        $.messager.confirm("系统提示", "您确定要删除这条数据吗?", function (r) {
+            if (r) {
+                $.post("/sys/role/deleteAll", {ids: ids.join(",")}, function (result) {
+                    if (result.success) {
+                        message("数据已成功删除！");
+                        $("#dg").datagrid("reload");
+                    } else {
+                        message(result.msg);
+                    }
+                }, "json");
+            }
+        });
+    }
+
+    $("#dg").datagrid({
+        onLoadSuccess: function (data) {
+            $('.easyui-linkbutton-setting').linkbutton({text: '资源设置', plain: true});
+            $('.easyui-linkbutton-edit').linkbutton({text: '编辑', plain: true});
+            $('.easyui-linkbutton-del').linkbutton({text: '删除', plain: true});
+            $('#dg').datagrid('fixRowHeight');
+        }
+    });
+
+    function formatOp(val, row, index) {
+
+        let str = '';
+        if (row.id !== 1) {
+            if ($("#set").length > 0) {
+                str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-setting success"  onclick="setRecord(\'{0}\');"  style="margin-right: 5px">设置</a>', row.id);
+            }
+            if ($("#update").length > 0) {
+                str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-edit primary"  onclick="editRecord(\'{0}\');"  style="margin-right: 5px">编辑</a>', index);
+            }
+            if ($("#delete").length > 0) {
+                str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-del error"   onclick="deleteRecord(\'{0}\');"  style="margin-right: 5px">删除</a>', row.id);
+            }
+        }
+        return str;
+    }
+</script>
+</body>
+</html>

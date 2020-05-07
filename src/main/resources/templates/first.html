@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="cn" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+    <meta charset="utf-8">
+    <!-- 引入 ECharts 文件 -->
+    <script src="/js/echarts.min.js"></script>
+    <link th:replace="comm/header :: copy"/>
+</head>
+<body>
+<div id="main" style="width: 100%;height:400px;"></div>
+<div id="data" style="width: 100%;height:400px;">
+    <table id="dg"  class="easyui-datagrid"
+           fitColumns="true" pagination="true" rownumbers="true" singleSelect="true" method="get"
+           url="/stock/stocksum/list" fit="true" toolbar="#tb">
+        <thead data-options="frozen:true">
+        <tr>
+            <th field="flowerNo" width="80" align="center">花号</th>
+            <th field="prate" width="120" align="center" data-options="formatter:formatprate">完成情况</th>
+        </tr>
+        </thead>
+        <thead>
+        <tr>
+            <th field="id" width="10" hidden align="center">编号</th>
+            <th field="container" width="80"  align="center">柜号</th>
+            <th field="order_id" width="10" hidden align="center">编号</th>
+            <th field="factory_id" width="10" hidden align="center">编号</th>
+            <th field="factoryName" width="120"  align="center">厂家</th>
+            <th field="pa" width="80" align="center">A等</th>
+            <th field="ra" width="80" align="center" styler="raStyler">A等余</th>
+            <th field="pb" width="80" align="center">B等</th>
+            <th field="rb" width="80" align="center" styler="raStyler">B等余</th>
+            <th field="p24" width="80" align="center">2+4</th>
+            <th field="r24" width="80" align="center" styler="raStyler">余</th>
+            <th field="p119" width="80" align="center">1-1.9</th>
+            <th field="r119" width="80" align="center" styler="raStyler">余</th>
+            <th field="premnant" width="80" align="center" >残布</th>
+            <th field="rremnant" width="80" align="center" styler="raStyler">余</th>
+            <th field="tr" width="120" align="center">总成品</th>
+            <th field="reduceRate" width="120" align="center">缩率</th>
+            <th field="isfinish" width="80"  align="center" formatter="formatfinish" styler="finishStyler">状态</th>
+            <th field="ispack" width="10" hidden align="center">缩率</th>
+            <th field="codelen" width="10" hidden align="center">缩率</th>
+        </tr>
+        </thead>
+    </table>
+</div>
+<script type="text/javascript">
+    window.onload = function(){
+        setTimeout("location.reload()",1000*60);
+    }
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('main'));
+
+    // 指定图表的配置项和数据
+    var option = {
+        title: {
+            text: '花号完成状态图'
+        },
+        tooltip: {},
+        legend: {
+            data:['花号']
+        },
+        xAxis: {
+            data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+        },
+        yAxis: {},
+        series: [{
+            name: '花号',
+            type: 'bar',
+            data: [5, 20, 36, 10, 10, 20]
+        }]
+    };
+  $.ajax({
+      //请求方式
+      type : "GET",
+      //请求的媒体类型
+      contentType: "application/json;charset=UTF-8",
+      //请求地址
+      url : "/stock/stocksum/echart",
+      //数据，json字符串
+      //data : JSON.stringify(list),
+      //请求成功
+      success : function(result) {
+          if(result.success){
+              option.xAxis.data=result.data.xdata;
+              option.series[0].data=result.data.sdate;
+              console.log(result);
+              // 使用刚指定的配置项和数据显示图表。
+              myChart.setOption(option);
+          }
+
+      },
+      //请求失败，包含具体的错误信息
+      error : function(e){
+          console.log(e.status);
+          console.log(e.responseText);
+      }
+  });
+
+  function raStyler(value, row, index) {
+      if (value > row.codelen) {
+          return 'background-color:#ffee00;color:red;';
+      }
+  }
+
+  function formatprate(value, row) {
+      htmlstr='<div class="easyui-progressbar progressbar easyui-fluid" style="width: 100%; height: 20px;">'
+          +'<div class="progressbar-value" style="width: 100%; height: 20px; line-height: 20px;"> '
+          +'<div class="progressbar-text" style="width: '+value+'%'+'; height: 20px; line-height: 20px;">'+ value+'%'+'</div>'
+          +'</div>'
+          +'</div>';
+      return htmlstr;
+  }
+  function finishStyler(value, row, index) {
+      if (!value) {
+          return 'background:#D8FFD8';
+      }
+  }
+  function formatfinish(value, row) {
+      if(value){
+          return '已完成';
+      }
+      return '未完成';
+  }
+</script>
+</body>
+</html>

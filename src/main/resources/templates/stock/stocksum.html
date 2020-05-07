@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="cn" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>库存总计信息管理</title>
+    <link th:replace="comm/header :: copy"/>
+
+    <script type="text/javascript">
+        function searchRecord() {
+            $("#dg").datagrid('load', {
+                "findDate": $("#findDate").val(),
+                "container": $("#container").val(),
+                "flowerNo": $("#flowerCode").val(),
+                "finish": $("#finish").val()
+            });
+        }
+        function formatOp(val, row, index) {
+            var str = '';
+            if ($("#update").length > 0) {
+                if(row.ispack===true){
+                    str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-edit primary"  onclick="packageRecord(\'{0}\');"  style="margin-right: 5px">打包</a>', row.id);
+                }
+             }
+            if ($("#delete").length > 0) {
+                if(row.isfinish===false){
+                    str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-del error"   onclick="finishRecord(\'{0}\');"  style="margin-right: 5px">完成</a>', row.id);
+                }
+             }
+            return str;
+        }
+        function packageRecord(id) {
+            $.messager.confirm("系统提示", "您确定要打包这条数据吗?", function (r) {
+                if (r) {
+                    $.post("/stock/stocksum/package", {id: id}, function (result) {
+                        message(result.message)
+                        if (result.success) {
+                            $("#dg").datagrid("reload");
+                        }
+                    }, "json");
+                }
+            });
+        }
+        function finishRecord(id) {
+            $.messager.confirm("系统提示", "您确定要完成这条数据吗?", function (r) {
+                if (r) {
+                    $.post("/stock/stocksum/finish", {id: id}, function (result) {
+                        message(result.message)
+                        if (result.success) {
+                            $("#dg").datagrid("reload");
+                        }
+                    }, "json");
+                }
+            });
+        }
+        function openDownload() {
+            var form = $("<form>");
+            form.attr("style", "display:none");
+            form.attr("target", "");
+            form.attr("method", "post");//提交方式为post
+            form.attr("action", "/stock/stocksum/download");//定义action
+            $("body").append(form);
+            form.submit();
+        }
+    </script>
+</head>
+<body style="margin: 1px">
+<div>
+    <shiro:hasPermission name="order:order:delete">
+        <input type="hidden" id="delete"/>
+    </shiro:hasPermission>
+    <shiro:hasPermission name="order:order:update">
+        <input type="hidden" id="update"/>
+    </shiro:hasPermission>
+</div>
+<div id="tb">
+    <shiro:hasPermission name="order:order:download">
+        <div style="display: inline-block;">
+            <a href="javascript:openDownload()" class="easyui-linkbutton primary" iconCls="fa fa-download"
+               plain="true">下载</a>
+        </div>
+    </shiro:hasPermission>
+    <shiro:hasPermission name="order:order:search">
+        <div style="display: inline-block;float:right;padding-right: 20px">
+            <table>
+                <tr>
+                    <td style="padding-right: 10px">
+                        <div class="form-item">
+                            <label class="label-top">日期：</label>
+                            <input id="findDate" type="text" style="height: 25px" class="easyui-datebox"/>
+                        </div>
+                    </td>
+                    <td style="padding-right: 10px">
+                        <div class="form-item">
+                            <label class="label-top">柜号：</label>
+                            <input id="container" class="easyui-textbox" style="height: 25px">
+                        </div>
+                    </td>
+                    <td style="padding-right: 10px">
+                        <div class="form-item">
+                            <label class="label-top">花号：</label>
+                            <input id="flowerCode" class="easyui-textbox" style="height: 25px">
+                        </div>
+                    </td>
+                    <td style="padding-right: 10px">
+                        <div class="form-item">
+                            <select id="finish" class="easyui-combobox" style="width:100px;height: 25px"
+                                    data-options="editable:false,panelHeight:null">
+                                <option value="2" selected>全部</option>
+                                <option value="1">已完成</option>
+                                <option value="0">未完成</option>
+                            </select>
+                        </div>
+                    </td>
+
+                    <td>
+                        <a href="javascript:void(0)" onclick="searchRecord()" class="easyui-linkbutton primary"
+                           iconCls="fa fa-search"
+                           plain="true">搜索</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </shiro:hasPermission>
+</div>
+<table id="dg"  class="easyui-datagrid"
+       fitColumns="true" pagination="true" rownumbers="true" singleSelect="true" method="get"
+       url="/stock/stocksum/list" fit="true" toolbar="#tb">
+    <thead data-options="frozen:true">
+    <tr>
+        <th field="flowerNo" width="80" align="center">花号</th>
+        <th field="prate" width="120" align="center" data-options="formatter:formatprate">完成情况</th>
+    </tr>
+    </thead>
+    <thead>
+    <tr>
+        <th field="id" width="10" hidden align="center">编号</th>
+        <th field="container" width="80"  align="center">柜号</th>
+        <th field="order_id" width="10" hidden align="center">编号</th>
+        <th field="factory_id" width="10" hidden align="center">编号</th>
+        <th field="factoryName" width="120"  align="center">厂家</th>
+        <th field="pa" width="80" align="center">A等</th>
+        <th field="ra" width="80" align="center" styler="raStyler">A等余</th>
+        <th field="pb" width="80" align="center">B等</th>
+        <th field="rb" width="80" align="center" styler="raStyler">B等余</th>
+        <th field="p24" width="80" align="center">2+4</th>
+        <th field="r24" width="80" align="center" styler="raStyler">余</th>
+        <th field="p119" width="80" align="center">1-1.9</th>
+        <th field="r119" width="80" align="center" styler="raStyler">余</th>
+        <th field="premnant" width="80" align="center" >残布</th>
+        <th field="rremnant" width="80" align="center" styler="raStyler">余</th>
+        <th field="tr" width="120" align="center">总成品</th>
+        <th field="reduceRate" width="120" align="center">缩率</th>
+        <th field="isfinish" width="80"  align="center" formatter="formatfinish" styler="finishStyler">状态</th>
+        <th field="ispack" width="10" hidden align="center">缩率</th>
+        <th field="codelen" width="10" hidden align="center">缩率</th>
+        <th field="aa" width="200" align="center" formatter="formatOp">操作</th>
+    </tr>
+    </thead>
+</table>
+
+<script type="text/javascript">
+    $(function () {
+
+        $("#dg").datagrid({
+            onLoadSuccess: function (data) {
+                $('.easyui-linkbutton-edit').linkbutton({text: '打包', plain: true});
+                $('.easyui-linkbutton-del').linkbutton({text: '完成', plain: true});
+                $('#dg').datagrid('fixRowHeight');
+            }
+        });
+
+    })
+
+    function raStyler(value, row, index) {
+        if (value > row.codelen) {
+            return 'background-color:#ffee00;color:red;';
+        }
+    }
+
+    function formatprate(value, row) {
+        htmlstr='<div class="easyui-progressbar progressbar easyui-fluid" style="width: 100%; height: 20px;">'
+            +'<div class="progressbar-value" style="width: 100%; height: 20px; line-height: 20px;"> '
+            +'<div class="progressbar-text" style="width: '+value+'%'+'; height: 20px; line-height: 20px;">'+ value+'%'+'</div>'
+            +'</div>'
+            +'</div>';
+        return htmlstr;
+    }
+    function finishStyler(value, row, index) {
+        if (!value) {
+            return 'background:#D8FFD8';
+        }
+    }
+    function formatfinish(value, row) {
+        if(value){
+            return '已完成';
+        }
+        return '未完成';
+    }
+</script>
+
+</body>
+</html>

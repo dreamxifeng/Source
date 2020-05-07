@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="cn" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>印花厂信息管理</title>
+    <link th:include="comm/header :: copy">
+    <style type="text/css">
+        .textbox-label {
+            width: 40px;
+        }
+    </style>
+    <script type="text/javascript">
+        function formatOp(val, row, index) {
+            var str = '';
+            if ($("#update").length > 0) {
+                str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-edit primary"  onclick="editRecord(\'{0}\');"  style="margin-right: 5px">编辑</a>', index);
+            }
+            if ($("#delete").length > 0) {
+                str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-del error"   onclick="deleteRecord(\'{0}\');"  style="margin-right: 5px">删除</a>', row.id);
+            }
+            return str;
+        }
+
+        function searchRecord() {
+            $("#dg").datagrid('load', {
+                "name": $("#name").val()
+            });
+        }
+
+        function closeDlg() {
+            $("#dlg").dialog("close");
+            $('#fm').form('clear');
+        }
+
+        function saveRecord() {
+            $("#fm").form("submit", {
+                url: "/base/printingfactory/save",
+                onSubmit: function () {
+                    return $(this).form("validate");
+                },
+                success: function (result) {
+                    var result = eval('(' + result + ')');
+                    message(result.message)
+                    if (result.success) {
+                        $("#dg").datagrid("reload");
+                        closeDlg();
+                    }
+                }
+            });
+        }
+
+        function openDlg() {
+            $('#fm').form('clear');
+            $("#dlg").dialog("open").dialog('center').dialog("setTitle", "添加印花厂信息信息");
+
+        }
+
+        function editRecord(index) {
+            $('#fm').form('clear');
+            $("#dg").datagrid('selectRow', index);
+            var row = $("#dg").datagrid('getSelected');
+            $("#dlg").dialog("open").dialog("setTitle", "修改印花厂信息信息");
+            $("#fm").form("load", row);
+        }
+
+
+        function deleteRecord(id) {
+            $.messager.confirm("系统提示", "您确定要删除这条数据吗?", function (r) {
+                if (r) {
+                    $.post("/base/printingfactory/delete", {id: id}, function (result) {
+                        message(result.message)
+                        if (result.success) {
+                            $("#dg").datagrid("reload");
+                        }
+                    }, "json");
+                }
+            });
+        }
+    </script>
+</head>
+<body style="margin: 1px">
+<shiro:hasPermission name="base:printingfactory:delete">
+    <input type="hidden" id="delete"/>
+</shiro:hasPermission>
+<shiro:hasPermission name="base:printingfactory:update">
+    <input type="hidden" id="update"/>
+</shiro:hasPermission>
+<table id="dg" class="easyui-datagrid"
+       fitColumns="true" pagination="true" rownumbers="true" singleSelect="true" method="get"
+       url="/base/printingfactory/list" fit="true" toolbar="#tb">
+    <thead>
+    <th field="id" width="20" hidden align="center">编号</th>
+    <th field="ccode" width="50" align="center">代码</th>
+    <th field="printingFactory" width="150" align="center">名称</th>
+    <th field="remarks" hidden width="200" align="left">备注</th>
+    <th field="aa" width="50" align="center" formatter="formatOp">操作</th>
+    </thead>
+</table>
+
+<div id="tb">
+    <shiro:hasPermission name="base:printingfactory:add">
+        <div style="display: inline-block;">
+            <a href="javascript:openDlg()" class="easyui-linkbutton primary" iconCls="fa fa-plus"
+               plain="true">添加</a>
+        </div>
+    </shiro:hasPermission>
+    <shiro:hasPermission name="base:printingfactory:search">
+        <div style="display: inline-block;float:right">
+            <input id="name" class="easyui-textbox" style="width:70%;height: 25px" label="厂家:">
+            <a href="javascript:searchRecord()" class="easyui-linkbutton primary" iconCls="fa fa-search"
+               plain="true">搜索</a>
+        </div>
+    </shiro:hasPermission>
+</div>
+
+<div id="dlg" class="easyui-dialog" style="width:350px"
+     data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-buttons'">
+
+    <form id="fm" method="post" style="margin:0;padding:20px 20px">
+        <input type="hidden" name="id"/>
+        <div style="margin-bottom: 10px">
+            <input id="ccode" class="easyui-textbox" name="ccode" style="width:70%;height: 25px" label="代码:" required="true"
+                   validType="equals['#ccode']">
+        </div>
+        <div style="margin-bottom: 10px">
+            <input  class="easyui-textbox" name="printingFactory" style="width:70%;height: 25px" label="名称:" required="true">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="remarks" style="width:100%;height:80px" label="备注:" multiline="true">
+        </div>
+    </form>
+</div>
+<div id="dlg-buttons">
+    <a href="javascript:saveRecord()" class="easyui-linkbutton" iconCls="fa fa-check">保存</a>
+    <a href="javascript:closeDlg()" class="easyui-linkbutton" iconCls="fa fa-times">关闭</a>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $("#dg").datagrid({
+            onLoadSuccess: function (data) {
+                $('.easyui-linkbutton-edit').linkbutton({text: '编辑', plain: true});
+                $('.easyui-linkbutton-del').linkbutton({text: '删除', plain: true});
+                $('#dg').datagrid('fixRowHeight');
+            }
+        });
+    })
+    $.extend($.fn.validatebox.defaults.rules, {
+        equals: {
+            validator: function (value, param) {
+                var reg = /^\d{1,}$/;
+                return reg.test(value);
+            },
+            message: '代码必须为数字'
+        }
+    });
+</script>
+
+</body>
+</html>

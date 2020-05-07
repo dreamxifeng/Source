@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理</title>
+    <link th:include="comm/header :: copy">
+</head>
+<body style="margin: 1px">
+<table id="dg" class="easyui-datagrid"
+       fitColumns="true" pagination="true" rownumbers="true" singleSelect="true"
+       url="/sys/user" fit="true" method="get" toolbar="#tb">
+    <thead>
+    <th field="id" width="20" align="center" hidden>编号</th>
+    <th field="username" width="50" align="center">登录名</th>
+    <th field="cname" width="50" align="center">姓名</th>
+    <th field="remarks" width="80" hidden align="center">备注</th>
+    <th field="roles" width="150" align="center">拥有角色</th>
+    <th field="aa" width="50" align="center" formatter="formatOp">设置</th>
+    </thead>
+</table>
+
+<div id="tb">
+    <shiro:hasPermission name="sys:user:add">
+        <div style="display: inline-block">
+            <a href="javascript:addRecord()" class="easyui-linkbutton" iconCls="icon-add" plain="true">添加</a>
+        </div>
+    </shiro:hasPermission>
+    <shiro:hasPermission name="sys:user:search">
+        <div style="display: inline-block;float: right">
+            &nbsp;用户名：&nbsp;<input type="text" id="s_userName" size="20"/>
+            <a href="javascript:searchRecord()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+        </div>
+    </shiro:hasPermission>
+</div>
+<div id="dlg" class="easyui-dialog" modal="true" style="width: 450px;height: 300px;padding: 10px 20px "
+     closed="true" buttons="#dlg-buttons" data-options="onClose:function(){resetValue()}">
+    <form id="fm" method="post">
+        <input type="hidden" name="id"/>
+        <table cellspacing="8px">
+            <tr>
+                <td>登录名：</td>
+                <td>
+                    <input type="text" id="username" name="username" class="easyui-validatebox" required="true"/>
+                </td>
+            </tr>
+            <tr>
+                <td>用户名：</td>
+                <td>
+                    <input type="text" id="cname" name="cname" class="easyui-validatebox" required="true"/>
+                </td>
+            </tr>
+
+            <tr>
+                <td>备注：</td>
+                <td>
+                    <textarea rows="5" cols="40" id="remarks" name="remarks"></textarea>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+<div id="dlg-buttons">
+    <a href="javascript:saveRecord()" class="easyui-linkbutton">保存</a>
+    <a href="javascript:closeDlg()" class="easyui-linkbutton">关闭</a>
+</div>
+<div id="dlg2" class="easyui-dialog" modal="true" style="width: 500px;height: 350px;"
+     closed="true" buttons="#dlg-buttons2">
+    <input type="hidden" id="userId" name="userId"/>
+    <table id="dg2" class="easyui-datagrid" fitColumns="true" fit="true">
+        <thead>
+        <th field="cb" checkbox="true" align="center"></th>
+        <th field="id" width="20" align="left" hidden="true">编号</th>
+        <th field="cname" width="100" align="left">角色名称</th>
+        <th field="description" width="200" align="left">备注</th>
+        </thead>
+    </table>
+</div>
+
+<div id="dlg-buttons2">
+    <a href="javascript:saveRole()" class="easyui-linkbutton">保存</a>
+    <a href="javascript:closeRoleDlg()" class="easyui-linkbutton">关闭</a>
+</div>
+<shiro:hasPermission name="sys:user:role">
+    <input type="hidden" id="set"/>
+</shiro:hasPermission>
+<shiro:hasPermission name="sys:user:delete">
+    <input type="hidden" id="delete"/>
+</shiro:hasPermission>
+<shiro:hasPermission name="sys:user:edit">
+    <input type="hidden" id="update"/>
+</shiro:hasPermission>
+<script type="text/javascript">
+
+
+    function setRecord(roles, userId) {
+        roles = roles || '';
+        let rolesArr = roles.split(",");
+        $("#dlg2").dialog("open").dialog("setTitle", "选择角色");
+        $("#dg2").datagrid({
+            url: '/sys/role/getAll',
+            method: 'get',
+            onLoadSuccess: function (data) {
+                var allRows = $("#dg2").datagrid("getRows");
+                for (var i = 0; i < allRows.length; i++) {
+                    var name = allRows[i].cname;
+                    if ($.inArray(name, rolesArr) >= 0) {
+                        $("#dg2").datagrid("checkRow", i);
+                    }
+                }
+            }
+        });
+        $("#userId").val(userId);
+    }
+
+    function searchRecord() {
+        $("#dg").datagrid('load', {
+            "userName": $("#s_userName").val()
+        });
+    }
+
+    function resetValue() {
+        $('#fm').form('reset');
+    }
+
+    function closeDlg() {
+        $("#dlg").dialog("close");
+        resetValue();
+    }
+
+    function saveRecord() {
+        $("#fm").form("submit", {
+            url: '/sys/user',
+            onSubmit: function () {
+                return $(this).form("validate");
+            },
+            success: function (result) {
+                var result = eval('(' + result + ')');
+                if (result.success) {
+                    $("#dlg").dialog("close");
+                    $("#dg").datagrid("reload");
+                }
+                message(result.message);
+            }
+        });
+    }
+
+    function addRecord() {
+        $("#dlg").dialog("open").dialog("setTitle", "添加用户信息");
+    }
+
+    function editRecord(index) {
+        $("#dg").datagrid('selectRow', index);
+        var row = $("#dg").datagrid('getSelected');
+        $("#dlg").dialog("open").dialog("setTitle", "修改用户信息");
+        $("#fm").form("load", row);
+    }
+
+    function deleteRecord(id) {
+        $.messager.confirm("系统提示", "您确定要删除这条数据吗?", function (r) {
+            if (r) {
+                $.post("/sys/user/delete", {userid: id}, function (result) {
+                    if (result.success) {
+                        $("#dg").datagrid("reload");
+                    }
+                    message(result.message);
+                }, "json");
+            }
+        });
+    }
+
+    function saveRole() {
+        let userId = $("#userId").val();
+        let selectedRows = $("#dg2").datagrid("getSelections");
+        let strRoleIds = [];
+        let strRoleNames = [];
+        for (let i = 0; i < selectedRows.length; i++) {
+            strRoleIds.push(selectedRows[i].id);
+            strRoleNames.push(selectedRows[i].cname);
+        }
+        let roleIds = strRoleIds.join(",");
+        $.post("/sys/user/saveRoleSet",
+            {
+            roleIds: roleIds,
+            roleNames: strRoleNames.join(","),
+            userId: userId
+            },
+            function (result) {
+            if (result.success) {
+                $("#dg").datagrid("reload");
+                closeRoleDlg();
+            }
+            message(result.message);
+        }, "json");
+    }
+
+    function closeRoleDlg() {
+        $("#dlg2").dialog("close");
+    }
+
+    $("#dg").datagrid({
+        onLoadSuccess: function (data) {
+            $('.easyui-linkbutton-setting').linkbutton({text: '角色设置', plain: true});
+            $('.easyui-linkbutton-edit').linkbutton({text: '编辑', plain: true});
+            $('.easyui-linkbutton-del').linkbutton({text: '删除', plain: true});
+            $('#dg').datagrid('fixRowHeight');
+        }
+    });
+    function formatOp(val, row, index) {
+        let str = '';
+        if ($("#set").length > 0) {
+            str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-setting success"  onclick="setRecord(\'{0}\',\'{1}\');"  style="margin-right: 5px">设置</a>',row.roles, row.id);
+        }
+        if ($("#update").length > 0) {
+            str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-edit primary"  onclick="editRecord(\'{0}\');"  style="margin-right: 5px">编辑</a>', index);
+        }
+        if ($("#delete").length > 0) {
+            str += $.formatString('<a href="javascript:void(0)" class="easyui-linkbutton-del error"   onclick="deleteRecord(\'{0}\');"  style="margin-right: 5px">删除</a>', row.id);
+        }
+        return str;
+    }
+</script>
+</body>
+</html>

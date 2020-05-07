@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <classPathEntry  location="D:\maven\Repository\mysql\mysql-connector-java\5.1.47\mysql-connector-java-5.1.47.jar"/>
+    <context id="context" targetRuntime="MyBatis3">
+        <commentGenerator>
+            <property name="suppressAllComments" value="false"/>
+            <property name="suppressDate" value="true"/>
+        </commentGenerator>
+
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/3t_order?useUnicode=true&amp;useSSL=false"
+                        userId="root"
+                        password="root">
+        </jdbcConnection>
+
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+<!--        -->
+<!--                <javaModelGenerator targetPackage="cn.zhouxp.base.model" targetProject="src/main/java"/>-->
+
+<!--                <sqlMapGenerator targetPackage="mapper/base" targetProject="src/main/resources"/>-->
+
+<!--                <javaClientGenerator targetPackage="cn.zhouxp.base.mapper" targetProject="src/main/java"-->
+<!--                                     type="XMLMAPPER"/>-->
+
+<!--                <table tableName="b_code_port" domainObjectName="CodePort" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_open_scissors" domainObjectName="OpenScissors" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_packaging" domainObjectName="Packaging" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_printing_factory" domainObjectName="PrintingFactory" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_product" domainObjectName="Product" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_product_width" domainObjectName="ProductWidth" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_team" domainObjectName="Team" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_team_group" domainObjectName="TeamGroup" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_technology" domainObjectName="Technology" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="b_simple" domainObjectName="Simple" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--
+
+
+
+-->
+<!--        <javaModelGenerator targetPackage="cn.zhouxp.sys.model" targetProject="src/main/java"/>-->
+
+<!--                <sqlMapGenerator targetPackage="mapper/sys" targetProject="src/main/resources"/>-->
+
+<!--                <javaClientGenerator targetPackage="cn.zhouxp.sys.mapper" targetProject="src/main/java"-->
+<!--                                     type="XMLMAPPER"/>-->
+<!--                <table tableName="sys_user" domainObjectName="User" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="sys_permission" domainObjectName="Permission" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="sys_role" domainObjectName="Role" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="sys_role_permission" domainObjectName="RolePermission" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="sys_user_role" domainObjectName="UserRole" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--
+
+
+
+
+-->
+<!--                <javaModelGenerator targetPackage="cn.zhouxp.customer.model" targetProject="src/main/java"/>-->
+
+<!--                <sqlMapGenerator targetPackage="mapper/customer" targetProject="src/main/resources"/>-->
+
+<!--                <javaClientGenerator targetPackage="cn.zhouxp.customer.mapper" targetProject="src/main/java"-->
+<!--                                     type="XMLMAPPER"/>-->
+
+<!--                <table tableName="c_categroy" domainObjectName="Categroy" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--                <table tableName="c_customer" domainObjectName="Customer" >-->
+<!--                    <property name="enableSubPackages" value="true" />-->
+<!--                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--                </table>-->
+<!--
+
+
+
+-->
+<!--        <javaModelGenerator targetPackage="cn.zhouxp.stock.model" targetProject="src/main/java"/>-->
+
+<!--        <sqlMapGenerator targetPackage="mapper/stock" targetProject="src/main/resources"/>-->
+
+<!--        <javaClientGenerator targetPackage="cn.zhouxp.stock.mapper" targetProject="src/main/java"-->
+<!--                             type="XMLMAPPER"/>-->
+
+<!--        <table tableName="s_stock" domainObjectName="Stock" >-->
+<!--            <property name="enableSubPackages" value="true" />-->
+<!--            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="s_stock_sum" domainObjectName="StockSum" >-->
+<!--            <property name="enableSubPackages" value="true" />-->
+<!--            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="v_stock" domainObjectName="VStock" >-->
+<!--            <property name="enableSubPackages" value="true" />-->
+<!--            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--        </table>-->
+<!--        <table tableName="v_stock_sum" domainObjectName="VStockSum" >-->
+<!--            <property name="enableSubPackages" value="true" />-->
+<!--            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+<!--        </table>-->
+<!--
+
+
+
+-->
+                <javaModelGenerator targetPackage="cn.zhouxp.contract.model" targetProject="src/main/java"/>
+
+                <sqlMapGenerator targetPackage="mapper/contract" targetProject="src/main/resources"/>
+
+                <javaClientGenerator targetPackage="cn.zhouxp.contract.mapper" targetProject="src/main/java"
+                                     type="XMLMAPPER"/>
+
+                <table tableName="co_contract" domainObjectName="Contract" >
+                    <property name="enableSubPackages" value="true" />
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="co_extra" domainObjectName="Extra" >
+                    <property name="enableSubPackages" value="true" />
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="v_contract" domainObjectName="VContract" >
+                    <property name="enableSubPackages" value="true" />
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+    </context>
+</generatorConfiguration>
